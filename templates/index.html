@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Milk Quality Predictor - AI Solution</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="form-section">
+            <h1>Milk Analysis</h1>
+            <p>Enter the parameters below to predict the quality grade of the milk.</p>
+            
+            <form id="predictionForm">
+                <div class="input-group">
+                    <label>pH Level</label>
+                    <input type="number" step="0.1" name="ph" placeholder="e.g. 6.6" required>
+                </div>
+                
+                <div class="input-group">
+                    <label>Temperature (°C)</label>
+                    <input type="number" name="temperature" placeholder="e.g. 35" required>
+                </div>
+                
+                <div class="input-group">
+                    <label>Taste</label>
+                    <select name="taste" required>
+                        <option value="1">Good</option>
+                        <option value="0">Bad</option>
+                    </select>
+                </div>
+                
+                <div class="input-group">
+                    <label>Odor</label>
+                    <select name="odor" required>
+                        <option value="1">Good</option>
+                        <option value="0">Bad</option>
+                    </select>
+                </div>
+                
+                <div class="input-group">
+                    <label>Fat Content</label>
+                    <select name="fat" required>
+                        <option value="1">Optimal</option>
+                        <option value="0">Low</option>
+                    </select>
+                </div>
+                
+                <div class="input-group">
+                    <label>Turbidity</label>
+                    <select name="turbidity" required>
+                        <option value="1">High</option>
+                        <option value="0">Low</option>
+                    </select>
+                </div>
+                
+                <div class="input-group">
+                    <label>Colour Value</label>
+                    <input type="number" name="colour" placeholder="e.g. 254" required>
+                </div>
+                
+                <button type="submit" class="btn-predict">Analyze Quality</button>
+            </form>
+        </div>
+        
+        <div class="result-section">
+            <div id="placeholder">
+                <img src="https://cdni.iconscout.com/illustration/premium/thumb/scientist-doing-milk-purity-analysis-5710651-4779532.png" alt="Milk Analysis" class="placeholder-img">
+                <p style="margin-top: 1rem; color: #a0aec0;">Results will appear here after analysis</p>
+            </div>
+            
+            <div id="resultCard" class="result-card">
+                <div class="result-badge" id="resultBadge">
+                    <span id="resultLetter">L</span>
+                </div>
+                <div class="status-text">Predicted Quality</div>
+                <div class="status-value" id="statusValue">LOW</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('predictionForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button');
+            btn.textContent = 'Analyzing...';
+            btn.disabled = true;
+
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    displayResult(result.grade);
+                } else {
+                    alert('Error: ' + result.error);
+                }
+            } catch (error) {
+                alert('Connection failed!');
+            } finally {
+                btn.textContent = 'Analyze Quality';
+                btn.disabled = false;
+            }
+        });
+
+        function displayResult(grade) {
+            const card = document.getElementById('resultCard');
+            const placeholder = document.getElementById('placeholder');
+            const badge = document.getElementById('resultBadge');
+            const letter = document.getElementById('resultLetter');
+            const status = document.getElementById('statusValue');
+
+            placeholder.style.display = 'none';
+            card.style.display = 'block';
+            card.className = 'result-card res-' + grade.toLowerCase();
+            
+            letter.textContent = grade.charAt(0);
+            status.textContent = grade.toUpperCase();
+        }
+    </script>
+</body>
+</html>
